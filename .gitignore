@@ -1,0 +1,19 @@
+# SQLite runtime sidecars
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+
+# Exported/generated site data
+site-data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,19 @@
+name: Validate DB
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Validate database
+        run: python3 scripts/validate_db.py
+      - name: Export JSON smoke test
+        run: python3 scripts/export_site_json.py --out /tmp/site-data
