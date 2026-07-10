@@ -20,6 +20,15 @@ EXPORTS = {
     'conditional_approvals.json': 'SELECT * FROM vw_active_conditional_approvals ORDER BY approval_end_date, producer',
     'waivers.json': 'SELECT * FROM vw_active_waivers ORDER BY effective_end_date, party',
     'sources.json': 'SELECT * FROM vw_primary_sources ORDER BY publication_date DESC, source_key DESC',
+    'search_index.json': '''
+    SELECT
+        table_name,
+        row_id,
+        title,
+        snippet(search_index, 3, '<mark>', '</mark>', '...', 16) AS snippet
+    FROM search_index
+    LIMIT 1000
+''',
 }
 
 
