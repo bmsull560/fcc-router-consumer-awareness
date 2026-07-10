@@ -207,3 +207,40 @@ class TestBuildHtml(unittest.TestCase):
             self.assertIn('No timeline events available.', html)
         finally:
             build_html.load_json = original_load_json
+
+    def test_html_escaping(self):
+        from scripts.build_html import e, render, Safe
+        self.assertEqual(e('<script>'), '&lt;script&gt;')
+        self.assertEqual(e('"quoted"'), '&quot;quoted&quot;')
+        out = render('status.html', {
+            'headline': '<script>alert(1)</script>',
+            'continued_use_note': 'safe',
+            'update_note': 'safe',
+            'verification_note': 'safe',
+            'alerts': Safe('<p>allowed html</p>'),
+            'faqs': Safe(''),
+            'timeline': Safe(''),
+        })
+        self.assertIn('&lt;script&gt;', out)
+        self.assertIn('<p>allowed html</p>', out)
+
+    def test_internal_links_resolve(self):
+        import tempfile
+        import subprocess
+        import sys
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(
+                [sys.executable, str(ROOT / 'scripts' / 'build_site.py'), '--out', tmp, '--site-data', str(ROOT / 'site-data')],
+                check=True,
+            )
+            site = Path(tmp)
+            html = (site / 'index.html').read_text(encoding='utf-8')
+            hrefs = re.findall(r'href="([^"]+)"', html)
+            for href in hrefs:
+                if href.startswith('http') or href.startswith('#') or href.startswith('mailto:'):
+                    continue
+                parts = href.rstrip('/').split('/')
+                candidate = site / Path(*parts)
+                if href.endswith('/'):
+                    candidate = candidate / 'index.html'
+                self.assertTrue(candidate.exists(), f'Missing link target: {href}')
