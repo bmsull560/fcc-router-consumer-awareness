@@ -16,6 +16,8 @@ data/fcc_router_consumer_awareness.sql  Full SQL dump
 app/sqlite_api.py                       Tiny stdlib-only JSON API server
 scripts/validate_db.py                  Integrity, row-count, and view checks
 scripts/export_site_json.py             Export common website datasets to JSON
+scripts/build_site.py                   Generate static HTML site
+tests/                                  Unit tests for build, export, and site output
 examples/queries.sql                    Starter SQL for pages/API endpoints
 docs/database_README.md                 Schema notes, row counts, and caveats
 docs/source-caveats.md                  Publishing and refresh checklist
@@ -59,7 +61,7 @@ The exporter writes to `site-data/`, which is intentionally ignored by Git.
 ## Build the static website
 
 ```bash
-python scripts/build_site.py
+python3 scripts/build_site.py
 ```
 
 This writes generated HTML to `site/` (ignored by Git).
@@ -67,7 +69,7 @@ This writes generated HTML to `site/` (ignored by Git).
 ## Run tests
 
 ```bash
-python -m unittest discover tests -v
+python3 -m unittest discover tests -v
 ```
 
 ## Website-ready views
