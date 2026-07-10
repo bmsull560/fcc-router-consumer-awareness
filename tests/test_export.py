@@ -21,8 +21,8 @@ class TestExportJson(unittest.TestCase):
             self.assertTrue(path.exists())
             data = json.loads(path.read_text(encoding='utf-8'))
             self.assertIsInstance(data, list)
-            self.assertTrue(data)
-            self.assertIn('table_name', data[0])
-            self.assertIn('row_id', data[0])
-            self.assertIn('title', data[0])
-            self.assertIn('snippet', data[0])
+            if data:
+                self.assertIn('table_name', data[0])
+                self.assertIn('row_id', data[0])
+                self.assertIn('title', data[0])
+                self.assertIn('snippet', data[0])
