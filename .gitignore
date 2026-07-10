@@ -6,6 +6,7 @@
 
 # Exported/generated site data
 site-data/
+site/
 
 # Python
 __pycache__/
