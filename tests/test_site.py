@@ -29,3 +29,16 @@ class TestBuildSite(unittest.TestCase):
             self.assertIn('search_index.json', (out / 'search' / 'index.html').read_text(encoding='utf-8'))
             self.assertTrue((out / 'static' / 'style.css').exists())
             self.assertTrue((out / 'search' / 'search_index.json').exists())
+
+    def test_build_site_default_output_preserves_static_source(self):
+        """Default build writes to site/ without deleting the tracked source in site/static/."""
+        result = subprocess.run(
+            [sys.executable, str(ROOT / 'scripts' / 'build_site.py')],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((ROOT / 'site' / 'index.html').exists())
+        self.assertTrue((ROOT / 'site' / 'static' / 'style.css').exists())
+        self.assertTrue((ROOT / 'site' / 'static' / 'search.js').exists())
+        self.assertTrue((ROOT / 'site' / 'search' / 'search_index.json').exists())

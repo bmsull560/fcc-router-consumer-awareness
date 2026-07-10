@@ -292,9 +292,10 @@ def main(argv: list[str] | None = None) -> int:
             target.write_text(builder(root), encoding='utf-8')
 
         static_target = SITE_DIR / 'static'
-        if static_target.exists():
-            shutil.rmtree(static_target)
-        shutil.copytree(STATIC_DIR, static_target)
+        if static_target.resolve() != STATIC_DIR.resolve():
+            if static_target.exists():
+                shutil.rmtree(static_target)
+            shutil.copytree(STATIC_DIR, static_target)
 
         # Copy search_index.json into search/ directory for local fetch
         (SITE_DIR / 'search' / 'search_index.json').write_text(
