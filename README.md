@@ -56,6 +56,20 @@ python3 scripts/export_site_json.py
 
 The exporter writes to `site-data/`, which is intentionally ignored by Git.
 
+## Build the static website
+
+```bash
+python scripts/build_site.py
+```
+
+This writes generated HTML to `site/` (ignored by Git).
+
+## Run tests
+
+```bash
+python -m unittest discover tests -v
+```
+
 ## Website-ready views
 
 The database includes prebuilt views for common consumer-awareness pages:
