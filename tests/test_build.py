@@ -253,3 +253,14 @@ class TestBuildHtml(unittest.TestCase):
                         resolved_site in target.parents,
                         f'Link target escapes site root: {href} -> {target}',
                     )
+
+    def test_build_is_repeatable(self):
+        import tempfile
+        from scripts.build_html import main as build_main
+        with tempfile.TemporaryDirectory() as tmp:
+            site = Path(tmp) / 'site'
+            build_main(['--site-data', str(ROOT / 'site-data'), '--site', str(site)])
+            first = (site / 'index.html').read_bytes()
+            build_main(['--site-data', str(ROOT / 'site-data'), '--site', str(site)])
+            second = (site / 'index.html').read_bytes()
+            self.assertEqual(first, second)

@@ -27,6 +27,7 @@ EXPORTS = {
         title,
         snippet(search_index, 3, '<mark>', '</mark>', '...', 16) AS snippet
     FROM search_index
+    ORDER BY table_name, row_id
     LIMIT 1000
 ''',
 }

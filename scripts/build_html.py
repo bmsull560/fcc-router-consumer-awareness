@@ -257,13 +257,13 @@ def build_search(root: str = '') -> str:
     return render_page(title='Search', body=body, root=root)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     global SITE_DATA_DIR, SITE_DIR
 
     parser = argparse.ArgumentParser(description='Render static HTML from site-data JSON.')
     parser.add_argument('--site-data', default=str(SITE_DATA_DIR), help='input JSON directory')
     parser.add_argument('--site', default=str(SITE_DIR), help='output HTML directory')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     original_site_data_dir = SITE_DATA_DIR
     original_site_dir = SITE_DIR
