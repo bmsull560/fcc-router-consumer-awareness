@@ -27,7 +27,6 @@ EXPORTS = {
         title,
         snippet(search_index, 3, '<mark>', '</mark>', '...', 16) AS snippet
     FROM search_index
-    LIMIT 1000
 ''',
 }
 
