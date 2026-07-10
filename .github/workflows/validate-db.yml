@@ -1,4 +1,4 @@
-name: Validate DB
+name: Validate DB and Build Site
 
 on:
   push:
@@ -17,3 +17,7 @@ jobs:
         run: python3 scripts/validate_db.py
       - name: Export JSON smoke test
         run: python3 scripts/export_site_json.py --out /tmp/site-data
+      - name: Build static site
+        run: python scripts/build_site.py
+      - name: Run site tests
+        run: python -m unittest discover tests -v
