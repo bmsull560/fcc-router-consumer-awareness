@@ -113,9 +113,21 @@ def build_home(root: str = '') -> str:
     return render_page(title='Home', body=body, current_as_of=status.get('current_as_of', '2026-07-09'), root=root)
 
 
+def source_links(urls: str) -> str:
+    """Turn a pipe-separated list of source URLs into HTML links."""
+    if not urls:
+        return ''
+    parts = [u.strip() for u in str(urls).split('|') if u.strip()]
+    return ' | '.join(f'<a href="{e(u)}">{e(u)}</a>' for u in parts)
+
+
 def build_faqs(root: str = '') -> str:
     """Render the FAQ page from site-data JSON, grouped by category."""
     faqs = load_json('faqs.json')
+    if not faqs:
+        body = render('faqs.html', {'faq_groups': Safe('<p>No FAQs available.</p>')})
+        return render_page(title='FAQs', body=body, root=root)
+
     by_category: dict[str, list[dict[str, object]]] = {}
     for f in faqs:
         by_category.setdefault(f['category'], []).append(f)
@@ -126,7 +138,7 @@ def build_faqs(root: str = '') -> str:
             f'<article class="card"><h3>{e(item["question"])}</h3>'
             f'<p><strong>Short answer:</strong> {e(item["answer_short"])}</p>'
             f'<p>{e(item["answer_long"])}</p>'
-            f'<p class="source-link">Sources: {source_links(item.get("source_urls", ""))}</p></article>'
+            f'{_faq_sources_html(item.get("source_urls", ""))}</article>'
             for item in items
         )
         groups.append(f'<h2>{e(category)}</h2>{items_html}')
@@ -135,10 +147,10 @@ def build_faqs(root: str = '') -> str:
     return render_page(title='FAQs', body=body, root=root)
 
 
-def source_links(urls: str) -> str:
-    """Turn a pipe-separated list of source URLs into HTML links."""
-    if not urls:
+def _faq_sources_html(urls: str) -> str:
+    """Return the rendered Sources line for an FAQ card, or empty string if none."""
+    sources = source_links(urls)
+    if not sources:
         return ''
-    parts = [u.strip() for u in str(urls).split('|') if u.strip()]
-    return ' | '.join(f'<a href="{e(u)}">{e(u)}</a>' for u in parts)
+    return f'<p class="source-link">Sources: {sources}</p>'
 

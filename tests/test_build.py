@@ -70,6 +70,16 @@ class TestBuildHtml(unittest.TestCase):
         html = build_faqs()
         self.assertIn('FAQs', html)
 
+        site_data = ROOT / 'site-data'
+        faqs = json.loads((site_data / 'faqs.json').read_text(encoding='utf-8'))
+        if faqs:
+            first = faqs[0]
+            self.assertIn(first['question'], html)
+            self.assertIn(first['category'], html)
+            if first.get('source_urls'):
+                first_url = first['source_urls'].split('|')[0].strip()
+                self.assertIn(f'<a href="{first_url}">', html)
+
     def test_css_class_sanitizes_values(self):
         from scripts.build_html import css_class
         self.assertEqual(css_class('WARNING!'), 'warning')
