@@ -1,0 +1,20 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - FCC_LOG_LEVEL=INFO
+      - FCC_DB_PATH=/app/data/fcc_router_consumer_awareness.db
+    volumes:
+      # The image runs as non-root appuser. Ensure ./data and ./backups are
+      # writable by that UID, or override with user: "${UID}:${GID}".
+      - ./data:/app/data
+      - ./backups:/app/backups
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/healthz\").read()' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3

@@ -1,0 +1,10 @@
+# Default reviewers for the whole repository
+* @bmsull560
+
+# Operational and deployment docs
+/docs/runbooks/ @bmsull560
+/.github/workflows/ @bmsull560
+
+# Database schema and migrations
+/migrations/ @bmsull560
+/data/ @bmsull560

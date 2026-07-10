@@ -1,0 +1,31 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to roll back to (e.g., v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Re-tag image as latest
+        run: |
+          IMAGE=ghcr.io/bmsull560/fcc-router-consumer-awareness
+          docker pull "$IMAGE:${{ github.event.inputs.version }}"
+          docker tag "$IMAGE:${{ github.event.inputs.version }}" "$IMAGE:latest"
+          docker push "$IMAGE:latest"

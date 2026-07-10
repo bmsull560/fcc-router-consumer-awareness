@@ -2,8 +2,8 @@
 
 A SQLite-backed data package and starter API for a consumer-awareness website about the FCC Covered List action involving consumer routers produced in foreign countries.
 
-Generated: 2026-07-09  
-Current as of: 2026-07-09  
+Generated: 2026-07-09
+Current as of: 2026-07-09
 Suggested GitHub repo: `bmsull560/fcc-router-consumer-awareness`
 
 This repository is designed for public explainers, FAQs, source-backed timelines, myth checks, alerts, and regulatory status summaries. It is **not** legal advice and **not** a SKU-level compliance database.
@@ -13,15 +13,25 @@ This repository is designed for public explainers, FAQs, source-backed timelines
 ```text
 data/fcc_router_consumer_awareness.db   SQLite database
 data/fcc_router_consumer_awareness.sql  Full SQL dump
-app/sqlite_api.py                       Tiny stdlib-only JSON API server
+migrations/0001_baseline.sql            Versioned schema baseline
+app/api.py                              FastAPI application server (runtime)
+app/sqlite_api.py                       Standalone stdlib-only JSON API server
+scripts/migrate.py                      Versioned SQLite migration runner
+scripts/backup_db.py                    Integrity-checked database backups
+scripts/restore_db.py                   Restore a backup after verification
 scripts/validate_db.py                  Integrity, row-count, and view checks
 scripts/export_site_json.py             Export common website datasets to JSON
 scripts/build_site.py                   Generate static HTML site
-tests/                                  Unit tests for build, export, and site output
+Dockerfile                              Container image for the FastAPI app
+docker-compose.yml                      Local Docker Compose orchestration
+tests/                                  Unit tests for build, export, site output, API, migrations, backups, and restore
 examples/queries.sql                    Starter SQL for pages/API endpoints
 docs/database_README.md                 Schema notes, row counts, and caveats
 docs/source-caveats.md                  Publishing and refresh checklist
-.github/workflows/validate-db.yml       CI database validation workflow
+docs/runbooks/                          Deployment, incident response, rollback, and disaster-recovery runbooks
+.github/workflows/ci.yml                CI lint, test, and validation workflow
+.github/workflows/release.yml           Build and push versioned images to GHCR
+.github/workflows/rollback.yml          Re-tag a previous image as latest
 PUSH_TO_GITHUB.md                       Manual GitHub publish steps
 ```
 
@@ -36,19 +46,26 @@ python3 scripts/validate_db.py
 Run the local JSON API:
 
 ```bash
-python3 app/sqlite_api.py
+make api
 ```
 
 Open these endpoints:
 
 ```text
 http://localhost:8000/healthz
+http://localhost:8000/ready
+http://localhost:8000/metrics
 http://localhost:8000/api/status
 http://localhost:8000/api/faqs
 http://localhost:8000/api/timeline
 http://localhost:8000/api/alerts
+http://localhost:8000/api/sources
 http://localhost:8000/api/search?q=firmware
 ```
+
+## Rate limits
+
+The `/api/search` endpoint is rate-limited to 30 requests per minute per client IP.
 
 Export static JSON for a frontend or static-site generator:
 
@@ -69,8 +86,47 @@ This writes generated HTML to `site/` (ignored by Git).
 ## Run tests
 
 ```bash
-python3 -m unittest discover tests -v
+make test
 ```
+
+## Development setup
+
+```bash
+make install
+```
+
+This creates `.venv/` and installs the project plus linting, formatting, type-checking, and testing tools.
+
+## Run with Docker
+
+Build and start the API with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+The API will be available at `http://localhost:8000`. Migrations run automatically on startup.
+
+## Development commands
+
+| Command | Purpose |
+|---|---|
+| `make lint` | Run `ruff` linting |
+| `make format` | Auto-format with `ruff format` |
+| `make type-check` | Run `mypy` |
+| `make test` | Run the pytest suite with coverage |
+| `make e2e` | Run end-to-end tests against a real uvicorn server |
+| `make audit` | Run `pip-audit` dependency security scan |
+| `make validate` | Validate the SQLite database |
+| `make build` | Build the static website |
+| `make backup` | Create a timestamped, integrity-checked backup |
+| `make restore BACKUP=...` | Restore the database from a backup |
+| `make api` | Run the FastAPI development server |
+| `make pre-commit` | Run pre-commit hooks on all files |
+
+## CI
+
+GitHub Actions runs lint, format check, type check, tests across Python 3.10–3.12, database validation, static-site build, and dependency auditing on every push and pull request.
 
 ## Website-ready views
 
@@ -95,6 +151,17 @@ FROM search_index
 WHERE search_index MATCH 'firmware OR updates';
 ```
 
+## Architecture and operations
+
+- [Architecture and Ownership](./docs/architecture.md)
+- [Deployment Runbook](./docs/runbooks/deployment.md)
+- [Release and Upgrade Runbook](./docs/runbooks/release-upgrade.md)
+- [Incident Response Runbook](./docs/runbooks/incident-response.md)
+- [Rollback Runbook](./docs/runbooks/rollback.md)
+- [Disaster Recovery Runbook](./docs/runbooks/disaster-recovery.md)
+- [SLOs and Alert Examples](./docs/runbooks/slos-alerts.md)
+- [Load-Testing Runbook](./docs/runbooks/load-testing.md)
+
 ## Scope and caveats
 
 Keep these distinctions visible in any website copy:
@@ -106,4 +173,4 @@ Keep these distinctions visible in any website copy:
 
 ## License
 
-No license has been selected. Add the license you want before publishing if you plan to allow reuse.
+This project is released into the public domain under the [CC0 1.0 Universal](LICENSE) license.

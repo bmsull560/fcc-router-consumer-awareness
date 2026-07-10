@@ -1,7 +1,7 @@
 # Static Website Shell Design
 
-**Package:** `fcc-router-consumer-awareness`  
-**Date:** 2026-07-09  
+**Package:** `fcc-router-consumer-awareness`
+**Date:** 2026-07-09
 **Status:** Approved for implementation
 
 ## Goal

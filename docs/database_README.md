@@ -1,7 +1,7 @@
 # FCC Router Consumer Awareness Database
 
-Generated: 2026-07-09T18:53:42Z  
-Current as of: 2026-07-09  
+Generated: 2026-07-09T18:53:42Z
+Current as of: 2026-07-09
 Format: SQLite 3 database plus SQL dump
 
 ## Purpose
