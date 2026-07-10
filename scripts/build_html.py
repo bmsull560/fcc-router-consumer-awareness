@@ -2,9 +2,11 @@
 """Render static HTML pages from site-data JSON using stdlib templates."""
 from __future__ import annotations
 
+import argparse
 import html
 import json
 import re
+import shutil
 from pathlib import Path
 from string import Template
 
@@ -253,4 +255,56 @@ def build_search(root: str = '') -> str:
     """Render the search page."""
     body = render('search.html', {'root': root})
     return render_page(title='Search', body=body, root=root)
+
+
+def main() -> int:
+    global SITE_DATA_DIR, SITE_DIR, TEMPLATE_DIR, STATIC_DIR
+
+    parser = argparse.ArgumentParser(description='Render static HTML from site-data JSON.')
+    parser.add_argument('--site-data', default=str(SITE_DATA_DIR), help='input JSON directory')
+    parser.add_argument('--site', default=str(SITE_DIR), help='output HTML directory')
+    args = parser.parse_args()
+
+    SITE_DATA_DIR = Path(args.site_data)
+    SITE_DIR = Path(args.site)
+    TEMPLATE_DIR = ROOT / 'site' / 'templates'
+    STATIC_DIR = ROOT / 'site' / 'static'
+
+    SITE_DIR.mkdir(parents=True, exist_ok=True)
+
+    pages = {
+        'index.html': build_home,
+        'faqs/index.html': build_faqs,
+        'timeline/index.html': build_timeline,
+        'waivers/index.html': build_waivers,
+        'approvals/index.html': build_approvals,
+        'myths/index.html': build_myths,
+        'sources/index.html': build_sources,
+        'search/index.html': build_search,
+    }
+
+    for rel_path, builder in pages.items():
+        target = SITE_DIR / rel_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        depth = rel_path.count('/')
+        root = '../' * depth
+        target.write_text(builder(root), encoding='utf-8')
+
+    static_target = SITE_DIR / 'static'
+    if static_target.exists():
+        shutil.rmtree(static_target)
+    shutil.copytree(STATIC_DIR, static_target)
+
+    # Copy search_index.json into search/ directory for local fetch
+    (SITE_DIR / 'search' / 'search_index.json').write_text(
+        (SITE_DATA_DIR / 'search_index.json').read_text(encoding='utf-8'),
+        encoding='utf-8',
+    )
+
+    print(f'Wrote {len(pages)} pages and static assets to {SITE_DIR}')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
 

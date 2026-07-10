@@ -1,9 +1,27 @@
+import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-class TestSiteAssets(unittest.TestCase):
-    def test_style_css_exists(self):
-        self.assertTrue((ROOT / 'site' / 'static' / 'style.css').exists())
+class TestBuildSite(unittest.TestCase):
+    def test_build_site_creates_all_pages(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [sys.executable, str(ROOT / 'scripts' / 'build_site.py'), '--out', tmp],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            out = Path(tmp)
+            self.assertTrue((out / 'index.html').exists())
+            self.assertTrue((out / 'faqs' / 'index.html').exists())
+            self.assertTrue((out / 'timeline' / 'index.html').exists())
+            self.assertTrue((out / 'waivers' / 'index.html').exists())
+            self.assertTrue((out / 'approvals' / 'index.html').exists())
+            self.assertTrue((out / 'myths' / 'index.html').exists())
+            self.assertTrue((out / 'sources' / 'index.html').exists())
+            self.assertTrue((out / 'search' / 'index.html').exists())
