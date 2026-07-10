@@ -85,25 +85,47 @@ class TestBuildHtml(unittest.TestCase):
         html = build_timeline()
         self.assertIn('Timeline', html)
 
+        events = json.loads((ROOT / 'site-data' / 'timeline.json').read_text(encoding='utf-8'))
+        if events:
+            self.assertIn(events[0]['title'], html)
+
     def test_waivers_page_contains_waivers(self):
         from scripts.build_html import build_waivers
         html = build_waivers()
         self.assertIn('Waivers', html)
+
+        waivers = json.loads((ROOT / 'site-data' / 'waivers.json').read_text(encoding='utf-8'))
+        if waivers:
+            first = waivers[0]
+            self.assertIn(first['party'], html)
+            self.assertIn(first['equipment_scope'], html)
 
     def test_approvals_page_contains_approvals(self):
         from scripts.build_html import build_approvals
         html = build_approvals()
         self.assertIn('Conditional Approvals', html)
 
+        approvals = json.loads((ROOT / 'site-data' / 'conditional_approvals.json').read_text(encoding='utf-8'))
+        if approvals:
+            self.assertIn(approvals[0]['producer'], html)
+
     def test_myths_page_contains_claims(self):
         from scripts.build_html import build_myths
         html = build_myths()
         self.assertIn('Myths', html)
 
+        claims = json.loads((ROOT / 'site-data' / 'claims.json').read_text(encoding='utf-8'))
+        if claims:
+            self.assertIn(claims[0]['claim'], html)
+
     def test_sources_page_contains_sources(self):
         from scripts.build_html import build_sources
         html = build_sources()
         self.assertIn('Sources', html)
+
+        sources = json.loads((ROOT / 'site-data' / 'sources.json').read_text(encoding='utf-8'))
+        if sources:
+            self.assertIn(sources[0]['title'], html)
 
     def test_css_class_sanitizes_values(self):
         from scripts.build_html import css_class

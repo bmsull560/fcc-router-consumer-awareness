@@ -172,13 +172,17 @@ def build_timeline(root: str = '') -> str:
 def build_waivers(root: str = '') -> str:
     """Render the active waivers page."""
     waivers = load_json('waivers.json')
-    rows = ''.join(
-        f'<tr><td>{e(w["waiver_type"])}</td><td>{e(w["party"])}</td>'
-        f'<td>{e(w["equipment_scope"])}</td><td>{e(w.get("effective_start_date", ""))}</td>'
-        f'<td>{e(w.get("effective_end_date", "open-ended"))}</td>'
-        f'<td><a href="{e(w["source_url"])}">source</a></td></tr>'
-        for w in waivers
-    )
+    rows = []
+    for w in waivers:
+        start = w.get("effective_start_date") or ""
+        end = w.get("effective_end_date") or "open-ended"
+        rows.append(
+            f'<tr><td>{e(w["waiver_type"])}</td><td>{e(w["party"])}</td>'
+            f'<td>{e(w["equipment_scope"])}</td><td>{e(start)}</td>'
+            f'<td>{e(end)}</td>'
+            f'<td><a href="{e(w["source_url"])}">source</a></td></tr>'
+        )
+    rows = ''.join(rows)
     table = f'<table><thead><tr><th>Type</th><th>Party</th><th>Scope</th><th>Start</th><th>End</th><th>Source</th></tr></thead><tbody>{rows}</tbody></table>'
     return render_page(title='Waivers', body=render('waivers.html', {'waiver_table': Safe(table)}), root=root)
 
