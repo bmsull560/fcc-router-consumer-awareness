@@ -11,24 +11,28 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def run_export(out_dir: Path) -> None:
+    """Export SQLite data to JSON in out_dir."""
     result = subprocess.run(
         [sys.executable, str(ROOT / 'scripts' / 'export_site_json.py'), '--out', str(out_dir)],
         capture_output=True,
         text=True,
+        timeout=120,
     )
     if result.returncode != 0:
-        raise SystemExit(f'Export failed: {result.stderr}')
+        raise SystemExit(f'Export failed:\nstdout: {result.stdout}\nstderr: {result.stderr}')
     print(result.stdout.strip())
 
 
 def run_build(site_data_dir: Path, site_dir: Path) -> None:
+    """Render static HTML pages from site-data JSON into site_dir."""
     result = subprocess.run(
         [sys.executable, str(ROOT / 'scripts' / 'build_html.py'), '--site-data', str(site_data_dir), '--site', str(site_dir)],
         capture_output=True,
         text=True,
+        timeout=120,
     )
     if result.returncode != 0:
-        raise SystemExit(f'Build failed: {result.stderr}')
+        raise SystemExit(f'Build failed:\nstdout: {result.stdout}\nstderr: {result.stderr}')
     print(result.stdout.strip())
 
 
