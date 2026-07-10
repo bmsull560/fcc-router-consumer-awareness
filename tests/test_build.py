@@ -65,6 +65,11 @@ class TestBuildHtml(unittest.TestCase):
             max_date = max(ev['event_date'] for ev in timeline)
             self.assertEqual(first_date_match.group(1), max_date)
 
+    def test_faq_page_contains_questions(self):
+        from scripts.build_html import build_faqs
+        html = build_faqs()
+        self.assertIn('FAQs', html)
+
     def test_css_class_sanitizes_values(self):
         from scripts.build_html import css_class
         self.assertEqual(css_class('WARNING!'), 'warning')
