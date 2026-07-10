@@ -1,5 +1,8 @@
 import json
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -12,8 +15,6 @@ ROOT = Path(__file__).resolve().parents[1]
 class TestBuildHtml(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import subprocess
-        import sys
         subprocess.run([sys.executable, str(ROOT / 'scripts' / 'export_site_json.py')], check=True)
 
     def test_render_page_includes_title_and_body(self):
@@ -214,33 +215,41 @@ class TestBuildHtml(unittest.TestCase):
         self.assertEqual(e('"quoted"'), '&quot;quoted&quot;')
         out = render('status.html', {
             'headline': '<script>alert(1)</script>',
-            'continued_use_note': 'safe',
-            'update_note': 'safe',
-            'verification_note': 'safe',
+            'continued_use_note': '<b>bold note</b>',
+            'update_note': '<i>italic update</i>',
+            'verification_note': '<a href="x">verify</a>',
             'alerts': Safe('<p>allowed html</p>'),
             'faqs': Safe(''),
             'timeline': Safe(''),
         })
         self.assertIn('&lt;script&gt;', out)
+        self.assertIn('&lt;b&gt;bold note&lt;/b&gt;', out)
+        self.assertIn('&lt;i&gt;italic update&lt;/i&gt;', out)
+        self.assertIn('&lt;a href=&quot;x&quot;&gt;verify&lt;/a&gt;', out)
         self.assertIn('<p>allowed html</p>', out)
 
-    def test_internal_links_resolve(self):
-        import tempfile
-        import subprocess
-        import sys
+    def test_all_internal_links_resolve(self):
         with tempfile.TemporaryDirectory() as tmp:
             subprocess.run(
                 [sys.executable, str(ROOT / 'scripts' / 'build_site.py'), '--out', tmp, '--site-data', str(ROOT / 'site-data')],
                 check=True,
             )
             site = Path(tmp)
-            html = (site / 'index.html').read_text(encoding='utf-8')
-            hrefs = re.findall(r'href="([^"]+)"', html)
-            for href in hrefs:
-                if href.startswith('http') or href.startswith('#') or href.startswith('mailto:'):
-                    continue
-                parts = href.rstrip('/').split('/')
-                candidate = site / Path(*parts)
-                if href.endswith('/'):
-                    candidate = candidate / 'index.html'
-                self.assertTrue(candidate.exists(), f'Missing link target: {href}')
+            resolved_site = site.resolve()
+            for html_file in site.rglob('*.html'):
+                source_dir = html_file.parent
+                hrefs = re.findall(r'href="([^"]+)"', html_file.read_text(encoding='utf-8'))
+                for href in hrefs:
+                    if href.startswith(('http', '#', 'mailto:', '/')):
+                        continue
+                    target = (source_dir / href).resolve()
+                    if href.endswith('/'):
+                        target = target / 'index.html'
+                    self.assertTrue(
+                        target.exists(),
+                        f'Missing link target: {href} from {html_file}',
+                    )
+                    self.assertTrue(
+                        resolved_site in target.parents,
+                        f'Link target escapes site root: {href} -> {target}',
+                    )
