@@ -4,7 +4,7 @@
 *.sqlite-wal
 *.sqlite-shm
 
-# Exported/generated site data
+# Generated site outputs
 site-data/
 site/
 
