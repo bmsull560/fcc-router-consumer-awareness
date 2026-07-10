@@ -13,6 +13,8 @@ SITE_DIR = ROOT / 'site'
 TEMPLATE_DIR = ROOT / 'site' / 'templates'
 STATIC_DIR = ROOT / 'site' / 'static'
 
+HOME_PREVIEW_LIMIT = 3
+
 
 def load_json(name: str) -> list[dict[str, object]] | dict[str, object]:
     path = SITE_DATA_DIR / name
@@ -75,12 +77,13 @@ def build_home(root: str = '') -> str:
 
     faqs_html = ''.join(
         f'<article class="card"><h3>{e(f["question"])}</h3><p>{e(f["answer_short"])}</p></article>'
-        for f in faqs[:3]
+        for f in faqs[:HOME_PREVIEW_LIMIT]
     ) if faqs else '<p>No FAQs available.</p>'
 
+    timeline_sorted = sorted(timeline, key=lambda ev: ev['event_date'], reverse=True)
     timeline_html = '<ul>' + ''.join(
         f'<li><strong>{e(ev["event_date"])}</strong> — {e(ev["title"])}<br>{e(ev["summary"])}</li>'
-        for ev in timeline[:3]
+        for ev in timeline_sorted[:HOME_PREVIEW_LIMIT]
     ) + '</ul>' if timeline else '<p>No timeline events available.</p>'
 
     body = render(

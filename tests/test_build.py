@@ -1,7 +1,8 @@
+import json
 import unittest
 from pathlib import Path
 
-from scripts.build_html import render_page
+from scripts.build_html import build_home, render_page
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,8 +28,6 @@ class TestBuildHtml(unittest.TestCase):
         self.assertIn('<p>Safe HTML</p>', out)
 
     def test_home_page_contains_status_and_alerts(self):
-        import json
-        from scripts.build_html import build_home
         html = build_home()
         self.assertIn('FCC Router Consumer Awareness', html)
         self.assertIn('Current as of', html)

@@ -76,6 +76,8 @@ a { color: var(--color-accent); }
 
 .alert-urgent { background: var(--color-danger); border-color: #721c24; }
 .alert-warning { background: var(--color-warning); border-color: #856404; }
+.alert-info { background: #e8f4f8; border-color: #0c5460; }
+.alert-notice { background: #e2e3e5; border-color: #383d41; }
 
 .source-link {
   font-size: 0.9rem;
