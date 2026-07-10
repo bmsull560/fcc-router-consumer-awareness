@@ -6,7 +6,11 @@
 
 # Generated site outputs
 site-data/
-site/
+site/*
+!site/templates/
+!site/templates/**
+!site/static/
+!site/static/**
 
 # Python
 __pycache__/
