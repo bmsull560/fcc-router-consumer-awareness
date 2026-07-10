@@ -27,7 +27,23 @@ class TestBuildHtml(unittest.TestCase):
         self.assertIn('<p>Safe HTML</p>', out)
 
     def test_home_page_contains_status_and_alerts(self):
+        import json
         from scripts.build_html import build_home
         html = build_home()
         self.assertIn('FCC Router Consumer Awareness', html)
         self.assertIn('Current as of', html)
+
+        site_data = ROOT / 'site-data'
+        status = json.loads((site_data / 'current_status.json').read_text(encoding='utf-8'))
+        if status:
+            status = status[0]
+            self.assertIn(status.get('headline', ''), html)
+        alerts = json.loads((site_data / 'alerts.json').read_text(encoding='utf-8'))
+        if alerts:
+            self.assertIn(alerts[0].get('title', ''), html)
+        faqs = json.loads((site_data / 'faqs.json').read_text(encoding='utf-8'))
+        if faqs:
+            self.assertIn(faqs[0].get('question', ''), html)
+        timeline = json.loads((site_data / 'timeline.json').read_text(encoding='utf-8'))
+        if timeline:
+            self.assertIn(timeline[0].get('title', ''), html)

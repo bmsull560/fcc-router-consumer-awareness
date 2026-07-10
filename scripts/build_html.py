@@ -62,37 +62,38 @@ def render_page(title: str, body: str, current_as_of: str = '2026-07-09', root: 
 
 
 def build_home(root: str = '') -> str:
-    status = load_json('current_status.json')[0]
+    statuses = load_json('current_status.json')
+    status = statuses[0] if statuses else {}
     alerts = load_json('alerts.json')
     faqs = load_json('faqs.json')
     timeline = load_json('timeline.json')
 
     alerts_html = ''.join(
-        f'<div class="alert alert-{a["severity"]}"><strong>{e(a["title"])}</strong><p>{e(a["body"])}</p></div>'
+        f'<div class="alert alert-{e(a["severity"])}"><strong>{e(a["title"])}</strong><p>{e(a["body"])}</p></div>'
         for a in alerts
     ) if alerts else '<p>No active alerts.</p>'
 
     faqs_html = ''.join(
         f'<article class="card"><h3>{e(f["question"])}</h3><p>{e(f["answer_short"])}</p></article>'
         for f in faqs[:3]
-    )
+    ) if faqs else '<p>No FAQs available.</p>'
 
     timeline_html = '<ul>' + ''.join(
         f'<li><strong>{e(ev["event_date"])}</strong> — {e(ev["title"])}<br>{e(ev["summary"])}</li>'
         for ev in timeline[:3]
-    ) + '</ul>'
+    ) + '</ul>' if timeline else '<p>No timeline events available.</p>'
 
     body = render(
         'status.html',
         {
-            'headline': status['headline'],
-            'continued_use_note': status['continued_use_note'],
-            'update_note': status['update_note'],
-            'verification_note': status['verification_note'],
+            'headline': status.get('headline', ''),
+            'continued_use_note': status.get('continued_use_note', ''),
+            'update_note': status.get('update_note', ''),
+            'verification_note': status.get('verification_note', ''),
             'alerts': Safe(alerts_html),
             'faqs': Safe(faqs_html),
             'timeline': Safe(timeline_html),
         },
     )
-    return render_page(title='Home', body=body, root=root)
+    return render_page(title='Home', body=body, current_as_of=status.get('current_as_of', '2026-07-09'), root=root)
 
