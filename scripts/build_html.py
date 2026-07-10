@@ -158,69 +158,93 @@ def _faq_sources_html(urls: str) -> str:
 def build_timeline(root: str = '') -> str:
     """Render the regulatory timeline page."""
     events = load_json('timeline.json')
-    events_html = ''.join(
-        f'<article class="card"><h2>{e(ev["event_date"])} — {e(ev["title"])}</h2>'
-        f'<p><span class="label">Type:</span> {e(ev["event_type"])}</p>'
-        f'<p>{e(ev["summary"])}</p>'
-        f'<p><strong>Consumer impact:</strong> {e(ev.get("consumer_impact", ""))}</p>'
-        f'<p class="source-link"><a href="{e(ev["source_url"])}">Source: {e(ev["source_title"])}</a></p></article>'
-        for ev in events
-    )
+    if not events:
+        events_html = '<p>No timeline events available.</p>'
+    else:
+        events_sorted = sorted(events, key=lambda ev: ev['event_date'], reverse=True)
+        events_html = ''.join(
+            f'<article class="card"><h2>{e(ev["event_date"])} — {e(ev["title"])}</h2>'
+            f'<p><span class="label">Type:</span> {e(ev["event_type"])}</p>'
+            f'<p>{e(ev["summary"])}</p>'
+            f'<p><strong>Consumer impact:</strong> {e(ev.get("consumer_impact", ""))}</p>'
+            f'<p class="source-link"><a href="{e(ev["source_url"])}">Source: {e(ev["source_title"])}</a></p></article>'
+            for ev in events_sorted
+        )
     return render_page(title='Timeline', body=render('timeline.html', {'events': Safe(events_html)}), root=root)
 
 
 def build_waivers(root: str = '') -> str:
     """Render the active waivers page."""
     waivers = load_json('waivers.json')
-    rows = []
-    for w in waivers:
-        start = w.get("effective_start_date") or ""
-        end = w.get("effective_end_date") or "open-ended"
-        rows.append(
-            f'<tr><td>{e(w["waiver_type"])}</td><td>{e(w["party"])}</td>'
-            f'<td>{e(w["equipment_scope"])}</td><td>{e(start)}</td>'
-            f'<td>{e(end)}</td>'
-            f'<td><a href="{e(w["source_url"])}">source</a></td></tr>'
-        )
-    rows = ''.join(rows)
-    table = f'<table><thead><tr><th>Type</th><th>Party</th><th>Scope</th><th>Start</th><th>End</th><th>Source</th></tr></thead><tbody>{rows}</tbody></table>'
+    if not waivers:
+        table = '<p>No waivers available.</p>'
+    else:
+        rows = []
+        for w in waivers:
+            start = w.get("effective_start_date") or ""
+            end = w.get("effective_end_date") or "open-ended"
+            rows.append(
+                f'<tr><td>{e(w["waiver_type"])}</td><td>{e(w["party"])}</td>'
+                f'<td>{e(w["equipment_scope"])}</td><td>{e(start)}</td>'
+                f'<td>{e(end)}</td>'
+                f'<td><a href="{e(w["source_url"])}">source</a></td></tr>'
+            )
+        rows = ''.join(rows)
+        table = f'<table><thead><tr><th>Type</th><th>Party</th><th>Scope</th><th>Start</th><th>End</th><th>Source</th></tr></thead><tbody>{rows}</tbody></table>'
     return render_page(title='Waivers', body=render('waivers.html', {'waiver_table': Safe(table)}), root=root)
 
 
 def build_approvals(root: str = '') -> str:
     """Render the conditional approvals page."""
     approvals = load_json('conditional_approvals.json')
-    rows = ''.join(
-        f'<tr><td>{e(a["producer"])}</td><td>{e(a.get("brand_or_product_family", ""))}</td>'
-        f'<td>{e(a["device_description"])}</td><td>{e(a["approval_start_date"])}</td>'
-        f'<td>{e(a["approval_end_date"])}</td><td><a href="{e(a["source_url"])}">source</a></td></tr>'
-        for a in approvals
-    )
-    table = f'<table><thead><tr><th>Producer</th><th>Brand/Family</th><th>Device</th><th>Start</th><th>End</th><th>Source</th></tr></thead><tbody>{rows}</tbody></table>'
+    if not approvals:
+        table = '<p>No conditional approvals available.</p>'
+    else:
+        rows = []
+        for a in approvals:
+            start = a.get("approval_start_date") or ""
+            end = a.get("approval_end_date") or "open-ended"
+            rows.append(
+                f'<tr><td>{e(a["producer"])}</td><td>{e(a.get("brand_or_product_family", ""))}</td>'
+                f'<td>{e(a["device_description"])}</td><td>{e(start)}</td>'
+                f'<td>{e(end)}</td><td><a href="{e(a["source_url"])}">source</a></td></tr>'
+            )
+        rows = ''.join(rows)
+        table = f'<table><thead><tr><th>Producer</th><th>Brand/Family</th><th>Device</th><th>Start</th><th>End</th><th>Source</th></tr></thead><tbody>{rows}</tbody></table>'
     return render_page(title='Conditional Approvals', body=render('approvals.html', {'approval_table': Safe(table)}), root=root)
 
 
 def build_myths(root: str = '') -> str:
     """Render the myth checks page."""
     claims = load_json('claims.json')
-    claims_html = ''.join(
-        f'<article class="card"><h2>{e(c["claim"])}</h2>'
-        f'<p class="verdict-{e(c["verdict"])}">Verdict: {e(c["verdict"])}</p>'
-        f'<p>{e(c["explanation"])}</p>'
-        f'<p><strong>Guidance:</strong> {e(c.get("consumer_guidance", ""))}</p></article>'
-        for c in claims
-    )
+    if not claims:
+        claims_html = '<p>No myths or claims available.</p>'
+    else:
+        claims_html = ''.join(
+            f'<article class="card"><h2>{e(c["claim"])}</h2>'
+            f'<p class="verdict-{css_class(c["verdict"])}">Verdict: {e(c["verdict"])}</p>'
+            f'<p>{e(c["explanation"])}</p>'
+            f'<p><strong>Guidance:</strong> {e(c.get("consumer_guidance", ""))}</p></article>'
+            for c in claims
+        )
     return render_page(title='Myth Checks', body=render('myths.html', {'claims': Safe(claims_html)}), root=root)
 
 
 def build_sources(root: str = '') -> str:
     """Render the primary sources page."""
     sources = load_json('sources.json')
-    sources_html = '<ul>' + ''.join(
-        f'<li><a href="{e(s["url"])}">{e(s["title"])}</a> '
-        f'({e(s.get("publication_date", ""))}, {e(s["source_type"])})<br>'
-        f'<span class="source-link">{e(s.get("summary", ""))}</span></li>'
-        for s in sources
-    ) + '</ul>'
+    if not sources:
+        sources_html = '<p>No sources available.</p>'
+    else:
+        items = []
+        for s in sources:
+            pub_date = s.get("publication_date")
+            date_part = f'{e(pub_date)}, ' if pub_date else ''
+            items.append(
+                f'<li><a href="{e(s["url"])}">{e(s["title"])}</a> '
+                f'({date_part}{e(s["source_type"])})<br>'
+                f'<span class="source-link">{e(s.get("summary", ""))}</span></li>'
+            )
+        sources_html = '<ul>' + ''.join(items) + '</ul>'
     return render_page(title='Sources', body=render('sources.html', {'sources': Safe(sources_html)}), root=root)
 

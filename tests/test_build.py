@@ -88,6 +88,13 @@ class TestBuildHtml(unittest.TestCase):
         events = json.loads((ROOT / 'site-data' / 'timeline.json').read_text(encoding='utf-8'))
         if events:
             self.assertIn(events[0]['title'], html)
+            # Sorted by event_date descending; first rendered item matches max date.
+            max_date = max(ev['event_date'] for ev in events)
+            first_date_match = re.search(r'<h2>([^<]+)</h2>', html)
+            if first_date_match:
+                self.assertIn(max_date, first_date_match.group(1))
+        # Count check: one card per event.
+        self.assertEqual(len(re.findall(r'<article class="card">', html)), len(events))
 
     def test_waivers_page_contains_waivers(self):
         from scripts.build_html import build_waivers
@@ -99,6 +106,33 @@ class TestBuildHtml(unittest.TestCase):
             first = waivers[0]
             self.assertIn(first['party'], html)
             self.assertIn(first['equipment_scope'], html)
+        # Count check: header row plus one data row per waiver.
+        self.assertEqual(len(re.findall(r'<tr>', html)), len(waivers) + 1)
+
+    def test_waivers_page_handles_null_dates(self):
+        """Regression: null effective_start_date/effective_end_date render as empty/open-ended, not None."""
+        from scripts import build_html
+        original_load_json = build_html.load_json
+
+        def patched_load_json(name):
+            if name == 'waivers.json':
+                return [{
+                    'waiver_type': 'test_waiver',
+                    'party': 'Test Party',
+                    'equipment_scope': 'Test scope',
+                    'effective_start_date': None,
+                    'effective_end_date': None,
+                    'source_url': 'https://example.com/',
+                }]
+            return original_load_json(name)
+
+        build_html.load_json = patched_load_json
+        try:
+            html = build_html.build_waivers()
+            self.assertIn('open-ended', html)
+            self.assertNotIn('None', html)
+        finally:
+            build_html.load_json = original_load_json
 
     def test_approvals_page_contains_approvals(self):
         from scripts.build_html import build_approvals
@@ -108,6 +142,8 @@ class TestBuildHtml(unittest.TestCase):
         approvals = json.loads((ROOT / 'site-data' / 'conditional_approvals.json').read_text(encoding='utf-8'))
         if approvals:
             self.assertIn(approvals[0]['producer'], html)
+        # Count check: header row plus one data row per approval.
+        self.assertEqual(len(re.findall(r'<tr>', html)), len(approvals) + 1)
 
     def test_myths_page_contains_claims(self):
         from scripts.build_html import build_myths
@@ -117,6 +153,10 @@ class TestBuildHtml(unittest.TestCase):
         claims = json.loads((ROOT / 'site-data' / 'claims.json').read_text(encoding='utf-8'))
         if claims:
             self.assertIn(claims[0]['claim'], html)
+            # mostly_true verdict uses a sanitized CSS class name.
+            self.assertIn('verdict-mostly_true', html)
+        # Count check: one card per claim.
+        self.assertEqual(len(re.findall(r'<article class="card">', html)), len(claims))
 
     def test_sources_page_contains_sources(self):
         from scripts.build_html import build_sources
@@ -126,6 +166,10 @@ class TestBuildHtml(unittest.TestCase):
         sources = json.loads((ROOT / 'site-data' / 'sources.json').read_text(encoding='utf-8'))
         if sources:
             self.assertIn(sources[0]['title'], html)
+        # Count check: one list item per source within the main body (nav also uses <li>).
+        body_match = re.search(r'<main class="container">(.*)</main>', html, re.S)
+        body = body_match.group(1) if body_match else html
+        self.assertEqual(len(re.findall(r'<li>', body)), len(sources))
 
     def test_css_class_sanitizes_values(self):
         from scripts.build_html import css_class
