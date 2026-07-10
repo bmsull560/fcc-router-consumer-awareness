@@ -25,3 +25,9 @@ class TestBuildHtml(unittest.TestCase):
         self.assertIn('&lt;script&gt;', out)
         self.assertNotIn('<script>', out)
         self.assertIn('<p>Safe HTML</p>', out)
+
+    def test_home_page_contains_status_and_alerts(self):
+        from scripts.build_html import build_home
+        html = build_home()
+        self.assertIn('FCC Router Consumer Awareness', html)
+        self.assertIn('Current as of', html)
