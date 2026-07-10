@@ -80,6 +80,31 @@ class TestBuildHtml(unittest.TestCase):
                 first_url = first['source_urls'].split('|')[0].strip()
                 self.assertIn(f'<a href="{first_url}">', html)
 
+    def test_timeline_page_contains_events(self):
+        from scripts.build_html import build_timeline
+        html = build_timeline()
+        self.assertIn('Timeline', html)
+
+    def test_waivers_page_contains_waivers(self):
+        from scripts.build_html import build_waivers
+        html = build_waivers()
+        self.assertIn('Waivers', html)
+
+    def test_approvals_page_contains_approvals(self):
+        from scripts.build_html import build_approvals
+        html = build_approvals()
+        self.assertIn('Conditional Approvals', html)
+
+    def test_myths_page_contains_claims(self):
+        from scripts.build_html import build_myths
+        html = build_myths()
+        self.assertIn('Myths', html)
+
+    def test_sources_page_contains_sources(self):
+        from scripts.build_html import build_sources
+        html = build_sources()
+        self.assertIn('Sources', html)
+
     def test_css_class_sanitizes_values(self):
         from scripts.build_html import css_class
         self.assertEqual(css_class('WARNING!'), 'warning')
