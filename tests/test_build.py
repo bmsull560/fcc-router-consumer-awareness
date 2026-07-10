@@ -1,4 +1,3 @@
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -20,3 +19,9 @@ class TestBuildHtml(unittest.TestCase):
         self.assertIn('<title>Test', out)
         self.assertIn('<p>Hello</p>', out)
         self.assertIn('Current as of', out)
+
+    def test_title_is_escaped_and_body_is_safe(self):
+        out = render_page(title='<script>alert(1)</script>', body='<p>Safe HTML</p>')
+        self.assertIn('&lt;script&gt;', out)
+        self.assertNotIn('<script>', out)
+        self.assertIn('<p>Safe HTML</p>', out)

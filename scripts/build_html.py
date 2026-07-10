@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import html
 import json
-import shutil
 from pathlib import Path
 from string import Template
 
@@ -27,8 +26,8 @@ def e(value: object) -> str:
 
 class Safe:
     """Wrapper for pre-escaped HTML that should not be double-escaped."""
-    def __init__(self, html: str):
-        self.html = html
+    def __init__(self, markup: str):
+        self.html = markup
 
     def __str__(self) -> str:
         return self.html
@@ -43,7 +42,10 @@ def render(template_name: str, mapping: dict[str, object]) -> str:
         elif isinstance(v, (str, int, float, bool)):
             safe[k] = e(v)
         else:
-            safe[k] = v
+            raise TypeError(
+                f"Template value for {k!r} must be str, Safe, or scalar; "
+                f"got {type(v).__name__}"
+            )
     return Template(template_text).substitute(safe)
 
 
