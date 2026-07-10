@@ -64,3 +64,34 @@ class TestBuildHtml(unittest.TestCase):
         if first_date_match and timeline:
             max_date = max(ev['event_date'] for ev in timeline)
             self.assertEqual(first_date_match.group(1), max_date)
+
+    def test_css_class_sanitizes_values(self):
+        from scripts.build_html import css_class
+        self.assertEqual(css_class('WARNING!'), 'warning')
+        self.assertEqual(css_class('urgent'), 'urgent')
+        self.assertEqual(css_class('info notice'), 'infonotice')
+        self.assertEqual(css_class('<script>'), 'script')
+
+    def test_home_page_empty_states(self):
+        from scripts import build_html
+        original_load_json = build_html.load_json
+
+        def empty_load_json(name):
+            if name == 'current_status.json':
+                return [{
+                    'headline': 'Headline',
+                    'continued_use_note': 'Note',
+                    'update_note': 'Update',
+                    'verification_note': 'Verify',
+                    'current_as_of': '2026-07-09',
+                }]
+            return []
+
+        build_html.load_json = empty_load_json
+        try:
+            html = build_html.build_home()
+            self.assertIn('No active alerts.', html)
+            self.assertIn('No FAQs available.', html)
+            self.assertIn('No timeline events available.', html)
+        finally:
+            build_html.load_json = original_load_json
