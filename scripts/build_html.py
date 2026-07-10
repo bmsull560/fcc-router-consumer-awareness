@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from pathlib import Path
 from string import Template
 
@@ -24,6 +25,14 @@ def load_json(name: str) -> list[dict[str, object]] | dict[str, object]:
 def e(value: object) -> str:
     """HTML-escape a value."""
     return html.escape(str(value), quote=True)
+
+
+_CSS_CLASS_RE = re.compile(r'[^a-z0-9_-]')
+
+
+def css_class(value: object) -> str:
+    """Sanitize a value for use as a CSS class name."""
+    return _CSS_CLASS_RE.sub('', str(value).lower())
 
 
 class Safe:
@@ -64,14 +73,17 @@ def render_page(title: str, body: str, current_as_of: str = '2026-07-09', root: 
 
 
 def build_home(root: str = '') -> str:
+    """Render the home page from site-data JSON."""
     statuses = load_json('current_status.json')
+    if isinstance(statuses, dict):
+        statuses = [statuses]
     status = statuses[0] if statuses else {}
     alerts = load_json('alerts.json')
     faqs = load_json('faqs.json')
     timeline = load_json('timeline.json')
 
     alerts_html = ''.join(
-        f'<div class="alert alert-{e(a["severity"])}"><strong>{e(a["title"])}</strong><p>{e(a["body"])}</p></div>'
+        f'<div class="alert alert-{css_class(a["severity"])}"><strong>{e(a["title"])}</strong><p>{e(a["body"])}</p></div>'
         for a in alerts
     ) if alerts else '<p>No active alerts.</p>'
 

@@ -1,8 +1,9 @@
 import json
+import re
 import unittest
 from pathlib import Path
 
-from scripts.build_html import build_home, render_page
+from scripts.build_html import HOME_PREVIEW_LIMIT, build_home, render_page
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +28,7 @@ class TestBuildHtml(unittest.TestCase):
         self.assertNotIn('<script>', out)
         self.assertIn('<p>Safe HTML</p>', out)
 
-    def test_home_page_contains_status_and_alerts(self):
+    def test_home_page_contains_status_alerts_faqs_and_timeline(self):
         html = build_home()
         self.assertIn('FCC Router Consumer Awareness', html)
         self.assertIn('Current as of', html)
@@ -46,3 +47,20 @@ class TestBuildHtml(unittest.TestCase):
         timeline = json.loads((site_data / 'timeline.json').read_text(encoding='utf-8'))
         if timeline:
             self.assertIn(timeline[0].get('title', ''), html)
+
+        # Verify preview limits within each section.
+        faq_section = re.search(r'Top questions(.*?)Latest timeline events', html, re.S)
+        self.assertIsNotNone(faq_section)
+        faq_cards = re.findall(r'<article class="card">', faq_section.group(1))
+        self.assertLessEqual(len(faq_cards), HOME_PREVIEW_LIMIT)
+
+        timeline_section = re.search(r'Latest timeline events(.*)', html, re.S)
+        self.assertIsNotNone(timeline_section)
+        timeline_items = re.findall(r'<li>', timeline_section.group(1))
+        self.assertLessEqual(len(timeline_items), HOME_PREVIEW_LIMIT)
+
+        # Verify timeline is sorted by descending event_date.
+        first_date_match = re.search(r'<li><strong>([^<]+)</strong>', timeline_section.group(1))
+        if first_date_match and timeline:
+            max_date = max(ev['event_date'] for ev in timeline)
+            self.assertEqual(first_date_match.group(1), max_date)
