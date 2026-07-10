@@ -248,3 +248,9 @@ def build_sources(root: str = '') -> str:
         sources_html = '<ul>' + ''.join(items) + '</ul>'
     return render_page(title='Sources', body=render('sources.html', {'sources': Safe(sources_html)}), root=root)
 
+
+def build_search(root: str = '') -> str:
+    """Render the search page."""
+    body = render('search.html', {'root': root})
+    return render_page(title='Search', body=body, root=root)
+

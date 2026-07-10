@@ -171,6 +171,12 @@ class TestBuildHtml(unittest.TestCase):
         body = body_match.group(1) if body_match else html
         self.assertEqual(len(re.findall(r'<li>', body)), len(sources))
 
+    def test_search_page_loads_index(self):
+        from scripts.build_html import build_search
+        html = build_search()
+        self.assertIn('Search', html)
+        self.assertIn('search_index.json', html)
+
     def test_css_class_sanitizes_values(self):
         from scripts.build_html import css_class
         self.assertEqual(css_class('WARNING!'), 'warning')
