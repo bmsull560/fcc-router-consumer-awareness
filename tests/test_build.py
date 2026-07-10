@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.build_html import HOME_PREVIEW_LIMIT, build_home, render_page
+from scripts.build_html import HOME_PREVIEW_LIMIT, build_home, main as build_main, render_page
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -255,12 +255,15 @@ class TestBuildHtml(unittest.TestCase):
                     )
 
     def test_build_is_repeatable(self):
-        import tempfile
-        from scripts.build_html import main as build_main
         with tempfile.TemporaryDirectory() as tmp:
-            site = Path(tmp) / 'site'
-            build_main(['--site-data', str(ROOT / 'site-data'), '--site', str(site)])
-            first = (site / 'index.html').read_bytes()
-            build_main(['--site-data', str(ROOT / 'site-data'), '--site', str(site)])
-            second = (site / 'index.html').read_bytes()
-            self.assertEqual(first, second)
+            site1 = Path(tmp) / 'site1'
+            site2 = Path(tmp) / 'site2'
+            build_main(['--site-data', str(ROOT / 'site-data'), '--site', str(site1)])
+            build_main(['--site-data', str(ROOT / 'site-data'), '--site', str(site2)])
+            for html_file in site1.rglob('*.html'):
+                rel = html_file.relative_to(site1)
+                self.assertEqual(
+                    html_file.read_bytes(),
+                    (site2 / rel).read_bytes(),
+                    f'{rel} differs between builds',
+                )

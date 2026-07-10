@@ -50,7 +50,7 @@ def main() -> int:
         for filename, query in EXPORTS.items():
             data = rows_as_dicts(conn.execute(query))
             (out_dir / filename).write_text(
-                json.dumps(data, indent=2, ensure_ascii=False) + '\n',
+                json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False) + '\n',
                 encoding='utf-8',
             )
 

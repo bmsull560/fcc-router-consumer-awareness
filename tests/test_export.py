@@ -5,6 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from scripts.export_site_json import EXPORTS
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -31,7 +33,7 @@ class TestExportJson(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp1, tempfile.TemporaryDirectory() as tmp2:
             subprocess.run([sys.executable, str(ROOT / 'scripts' / 'export_site_json.py'), '--out', tmp1], check=True)
             subprocess.run([sys.executable, str(ROOT / 'scripts' / 'export_site_json.py'), '--out', tmp2], check=True)
-            for name in ['current_status.json', 'faqs.json', 'timeline.json', 'search_index.json']:
+            for name in EXPORTS:
                 a = Path(tmp1) / name
                 b = Path(tmp2) / name
                 self.assertEqual(a.read_bytes(), b.read_bytes(), f'{name} differs')
