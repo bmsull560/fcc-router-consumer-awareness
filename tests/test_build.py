@@ -14,123 +14,125 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class TestBuildHtml(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):
-        subprocess.run([sys.executable, str(ROOT / "scripts" / "export_site_json.py")], check=True)
+    def setUpClass(cls) -> None:
+        subprocess.run([sys.executable, str(ROOT / 'scripts' / 'export_site_json.py')], check=True)
 
-    def test_render_page_includes_title_and_body(self):
-        out = render_page(title="Test", body="<p>Hello</p>")
-        self.assertIn("<title>Test", out)
-        self.assertIn("<p>Hello</p>", out)
-        self.assertIn("Current as of", out)
+    def test_render_page_includes_title_and_body(self) -> None:
+        out = render_page(title='Test', body='<p>Hello</p>')
+        self.assertIn('<title>Test', out)
+        self.assertIn('<p>Hello</p>', out)
+        self.assertIn('Current as of', out)
 
-    def test_title_is_escaped_and_body_is_safe(self):
-        out = render_page(title="<script>alert(1)</script>", body="<p>Safe HTML</p>")
-        self.assertIn("&lt;script&gt;", out)
-        self.assertNotIn("<script>", out)
-        self.assertIn("<p>Safe HTML</p>", out)
+    def test_title_is_escaped_and_body_is_safe(self) -> None:
+        out = render_page(title='<script>alert(1)</script>', body='<p>Safe HTML</p>')
+        self.assertIn('&lt;script&gt;', out)
+        self.assertNotIn('<script>', out)
+        self.assertIn('<p>Safe HTML</p>', out)
 
-    def test_home_page_contains_status_alerts_faqs_and_timeline(self):
+    def test_home_page_contains_status_alerts_faqs_and_timeline(self) -> None:
         html = build_home()
-        self.assertIn("FCC Router Consumer Awareness", html)
-        self.assertIn("Current as of", html)
+        self.assertIn('FCC Router Consumer Awareness', html)
+        self.assertIn('Current as of', html)
 
-        site_data = ROOT / "site-data"
-        status = json.loads((site_data / "current_status.json").read_text(encoding="utf-8"))
+        site_data = ROOT / 'site-data'
+        status = json.loads((site_data / 'current_status.json').read_text(encoding='utf-8'))
         if status:
             status = status[0]
-            self.assertIn(status.get("headline", ""), html)
-        alerts = json.loads((site_data / "alerts.json").read_text(encoding="utf-8"))
+            self.assertIn(status.get('headline', ''), html)
+        alerts = json.loads((site_data / 'alerts.json').read_text(encoding='utf-8'))
         if alerts:
-            self.assertIn(alerts[0].get("title", ""), html)
-        faqs = json.loads((site_data / "faqs.json").read_text(encoding="utf-8"))
+            self.assertIn(alerts[0].get('title', ''), html)
+        faqs = json.loads((site_data / 'faqs.json').read_text(encoding='utf-8'))
         if faqs:
-            self.assertIn(faqs[0].get("question", ""), html)
-        timeline = json.loads((site_data / "timeline.json").read_text(encoding="utf-8"))
+            self.assertIn(faqs[0].get('question', ''), html)
+        timeline = json.loads((site_data / 'timeline.json').read_text(encoding='utf-8'))
         if timeline:
-            self.assertIn(timeline[0].get("title", ""), html)
+            self.assertIn(timeline[0].get('title', ''), html)
 
         # Verify preview limits within each section.
-        faq_section = re.search(r"Top questions(.*?)Latest timeline events", html, re.S)
+        faq_section = re.search(r'Top questions(.*?)Latest timeline events', html, re.S)
         self.assertIsNotNone(faq_section)
         assert faq_section is not None
-        faq_cards = re.findall(r'<article class="card">', faq_section.group(1))
+        faq_cards = re.findall(r'<article class="faq-card">', faq_section.group(1))
         self.assertLessEqual(len(faq_cards), HOME_PREVIEW_LIMIT)
 
-        timeline_section = re.search(r"Latest timeline events(.*)", html, re.S)
+        timeline_section = re.search(r'Latest timeline events(.*)', html, re.S)
         self.assertIsNotNone(timeline_section)
         assert timeline_section is not None
-        timeline_items = re.findall(r"<li>", timeline_section.group(1))
+        timeline_items = re.findall(r'<div class="timeline-item">', timeline_section.group(1))
         self.assertLessEqual(len(timeline_items), HOME_PREVIEW_LIMIT)
 
         # Verify timeline is sorted by descending event_date.
-        first_date_match = re.search(r"<li><strong>([^<]+)</strong>", timeline_section.group(1))
+        first_date_match = re.search(
+            r'<div class="timeline-date">([^<]+)</div>', timeline_section.group(1)
+        )
         if first_date_match and timeline:
-            max_date = max(ev["event_date"] for ev in timeline)
+            max_date = max(ev['event_date'] for ev in timeline)
             self.assertEqual(first_date_match.group(1), max_date)
 
-    def test_faq_page_contains_questions(self):
+    def test_faq_page_contains_questions(self) -> None:
         from scripts.build_html import build_faqs
 
         html = build_faqs()
-        self.assertIn("FAQs", html)
+        self.assertIn('FAQs', html)
 
-        site_data = ROOT / "site-data"
-        faqs = json.loads((site_data / "faqs.json").read_text(encoding="utf-8"))
+        site_data = ROOT / 'site-data'
+        faqs = json.loads((site_data / 'faqs.json').read_text(encoding='utf-8'))
         if faqs:
             first = faqs[0]
-            self.assertIn(first["question"], html)
-            self.assertIn(first["category"], html)
-            if first.get("source_urls"):
-                first_url = first["source_urls"].split("|")[0].strip()
+            self.assertIn(first['question'], html)
+            self.assertIn(first['category'], html)
+            if first.get('source_urls'):
+                first_url = first['source_urls'].split('|')[0].strip()
                 self.assertIn(f'<a href="{first_url}">', html)
 
-    def test_timeline_page_contains_events(self):
+    def test_timeline_page_contains_events(self) -> None:
         from scripts.build_html import build_timeline
 
         html = build_timeline()
-        self.assertIn("Timeline", html)
+        self.assertIn('Timeline', html)
 
-        events = json.loads((ROOT / "site-data" / "timeline.json").read_text(encoding="utf-8"))
+        events = json.loads((ROOT / 'site-data' / 'timeline.json').read_text(encoding='utf-8'))
         if events:
-            self.assertIn(events[0]["title"], html)
+            self.assertIn(events[0]['title'], html)
             # Sorted by event_date descending; first rendered item matches max date.
-            max_date = max(ev["event_date"] for ev in events)
-            first_date_match = re.search(r"<h2>([^<]+)</h2>", html)
+            max_date = max(ev['event_date'] for ev in events)
+            first_date_match = re.search(r'<div class="timeline-date">([^<]+)</div>', html)
             if first_date_match:
                 self.assertIn(max_date, first_date_match.group(1))
-        # Count check: one card per event.
-        self.assertEqual(len(re.findall(r'<article class="card">', html)), len(events))
+        # Count check: one timeline item per event.
+        self.assertEqual(len(re.findall(r'<article class="timeline-item">', html)), len(events))
 
-    def test_waivers_page_contains_waivers(self):
+    def test_waivers_page_contains_waivers(self) -> None:
         from scripts.build_html import build_waivers
 
         html = build_waivers()
-        self.assertIn("Waivers", html)
+        self.assertIn('Waivers', html)
 
-        waivers = json.loads((ROOT / "site-data" / "waivers.json").read_text(encoding="utf-8"))
+        waivers = json.loads((ROOT / 'site-data' / 'waivers.json').read_text(encoding='utf-8'))
         if waivers:
             first = waivers[0]
-            self.assertIn(first["party"], html)
-            self.assertIn(first["equipment_scope"], html)
+            self.assertIn(first['party'], html)
+            self.assertIn(first['equipment_scope'], html)
         # Count check: header row plus one data row per waiver.
-        self.assertEqual(len(re.findall(r"<tr>", html)), len(waivers) + 1)
+        self.assertEqual(len(re.findall(r'<tr>', html)), len(waivers) + 1)
 
-    def test_waivers_page_handles_null_dates(self):
+    def test_waivers_page_handles_null_dates(self) -> None:
         """Regression: null effective_start_date/effective_end_date render as empty/open-ended, not None."""
         from scripts import build_html
 
         original_load_json = build_html.load_json
 
-        def patched_load_json(name):
-            if name == "waivers.json":
+        def patched_load_json(name: str) -> object:
+            if name == 'waivers.json':
                 return [
                     {
-                        "waiver_type": "test_waiver",
-                        "party": "Test Party",
-                        "equipment_scope": "Test scope",
-                        "effective_start_date": None,
-                        "effective_end_date": None,
-                        "source_url": "https://example.com/",
+                        'waiver_type': 'test_waiver',
+                        'party': 'Test Party',
+                        'equipment_scope': 'Test scope',
+                        'effective_start_date': None,
+                        'effective_end_date': None,
+                        'source_url': 'https://example.com/',
                     }
                 ]
             return original_load_json(name)
@@ -138,82 +140,82 @@ class TestBuildHtml(unittest.TestCase):
         build_html.load_json = patched_load_json
         try:
             html = build_html.build_waivers()
-            self.assertIn("open-ended", html)
-            self.assertNotIn("None", html)
+            self.assertIn('open-ended', html)
+            self.assertNotIn('None', html)
         finally:
             build_html.load_json = original_load_json
 
-    def test_approvals_page_contains_approvals(self):
+    def test_approvals_page_contains_approvals(self) -> None:
         from scripts.build_html import build_approvals
 
         html = build_approvals()
-        self.assertIn("Conditional Approvals", html)
+        self.assertIn('Conditional Approvals', html)
 
         approvals = json.loads(
-            (ROOT / "site-data" / "conditional_approvals.json").read_text(encoding="utf-8")
+            (ROOT / 'site-data' / 'conditional_approvals.json').read_text(encoding='utf-8')
         )
         if approvals:
-            self.assertIn(approvals[0]["producer"], html)
+            self.assertIn(approvals[0]['producer'], html)
         # Count check: header row plus one data row per approval.
-        self.assertEqual(len(re.findall(r"<tr>", html)), len(approvals) + 1)
+        self.assertEqual(len(re.findall(r'<tr>', html)), len(approvals) + 1)
 
-    def test_myths_page_contains_claims(self):
+    def test_myths_page_contains_claims(self) -> None:
         from scripts.build_html import build_myths
 
         html = build_myths()
-        self.assertIn("Myths", html)
+        self.assertIn('Myths', html)
 
-        claims = json.loads((ROOT / "site-data" / "claims.json").read_text(encoding="utf-8"))
+        claims = json.loads((ROOT / 'site-data' / 'claims.json').read_text(encoding='utf-8'))
         if claims:
-            self.assertIn(claims[0]["claim"], html)
+            self.assertIn(claims[0]['claim'], html)
             # mostly_true verdict uses a sanitized CSS class name.
-            self.assertIn("verdict-mostly_true", html)
+            self.assertIn('verdict-mostly_true', html)
         # Count check: one card per claim.
         self.assertEqual(len(re.findall(r'<article class="card">', html)), len(claims))
 
-    def test_sources_page_contains_sources(self):
+    def test_sources_page_contains_sources(self) -> None:
         from scripts.build_html import build_sources
 
         html = build_sources()
-        self.assertIn("Sources", html)
+        self.assertIn('Sources', html)
 
-        sources = json.loads((ROOT / "site-data" / "sources.json").read_text(encoding="utf-8"))
+        sources = json.loads((ROOT / 'site-data' / 'sources.json').read_text(encoding='utf-8'))
         if sources:
-            self.assertIn(sources[0]["title"], html)
+            self.assertIn(sources[0]['title'], html)
         # Count check: one list item per source within the main body (nav also uses <li>).
-        body_match = re.search(r'<main class="container">(.*)</main>', html, re.S)
+        body_match = re.search(r'<main>(.*)</main>', html, re.S)
         body = body_match.group(1) if body_match else html
-        self.assertEqual(len(re.findall(r"<li>", body)), len(sources))
+        self.assertEqual(len(re.findall(r'<li>', body)), len(sources))
 
-    def test_search_page_loads_index(self):
+    def test_search_page_loads_index(self) -> None:
         from scripts.build_html import build_search
 
         html = build_search()
-        self.assertIn("Search", html)
-        self.assertIn("search_index.json", html)
+        self.assertIn('Search', html)
+        self.assertIn('search_index.json', html)
 
-    def test_css_class_sanitizes_values(self):
+    def test_css_class_sanitizes_values(self) -> None:
         from scripts.build_html import css_class
 
-        self.assertEqual(css_class("WARNING!"), "warning")
-        self.assertEqual(css_class("urgent"), "urgent")
-        self.assertEqual(css_class("info notice"), "infonotice")
-        self.assertEqual(css_class("<script>"), "script")
+        self.assertEqual(css_class('WARNING!'), 'warning')
+        self.assertEqual(css_class('urgent'), 'urgent')
+        self.assertEqual(css_class('info notice'), 'infonotice')
+        self.assertEqual(css_class('<script>'), 'script')
 
-    def test_home_page_empty_states(self):
+    def test_home_page_empty_states(self) -> None:
         from scripts import build_html
 
         original_load_json = build_html.load_json
 
-        def empty_load_json(name):
-            if name == "current_status.json":
+        def empty_load_json(name: str) -> object:
+            if name == 'current_status.json':
                 return [
                     {
-                        "headline": "Headline",
-                        "continued_use_note": "Note",
-                        "update_note": "Update",
-                        "verification_note": "Verify",
-                        "current_as_of": "2026-07-09",
+                        'headline': 'Headline',
+                        'continued_use_note': 'Note',
+                        'update_note': 'Update',
+                        'verification_note': 'Verify',
+                        'current_as_of': '2026-07-09',
                     }
                 ]
             return []
@@ -221,78 +223,79 @@ class TestBuildHtml(unittest.TestCase):
         build_html.load_json = empty_load_json
         try:
             html = build_html.build_home()
-            self.assertIn("No active alerts.", html)
-            self.assertIn("No FAQs available.", html)
-            self.assertIn("No timeline events available.", html)
+            self.assertIn('No active alerts.', html)
+            self.assertIn('No FAQs available.', html)
+            self.assertIn('No timeline events available.', html)
         finally:
             build_html.load_json = original_load_json
 
-    def test_html_escaping(self):
+    def test_html_escaping(self) -> None:
         from scripts.build_html import Safe, e, render
 
-        self.assertEqual(e("<script>"), "&lt;script&gt;")
-        self.assertEqual(e('"quoted"'), "&quot;quoted&quot;")
+        self.assertEqual(e('<script>'), '&lt;script&gt;')
+        self.assertEqual(e('"quoted"'), '&quot;quoted&quot;')
         out = render(
-            "status.html",
+            'status.html',
             {
-                "headline": "<script>alert(1)</script>",
-                "continued_use_note": "<b>bold note</b>",
-                "update_note": "<i>italic update</i>",
-                "verification_note": '<a href="x">verify</a>',
-                "alerts": Safe("<p>allowed html</p>"),
-                "faqs": Safe(""),
-                "timeline": Safe(""),
+                'headline': '<script>alert(1)</script>',
+                'continued_use_note': '<b>bold note</b>',
+                'update_note': '<i>italic update</i>',
+                'verification_note': '<a href="x">verify</a>',
+                'alerts': Safe('<p>allowed html</p>'),
+                'faqs': Safe(''),
+                'timeline': Safe(''),
+                'root': '',
             },
         )
-        self.assertIn("&lt;script&gt;", out)
-        self.assertIn("&lt;b&gt;bold note&lt;/b&gt;", out)
-        self.assertIn("&lt;i&gt;italic update&lt;/i&gt;", out)
-        self.assertIn("&lt;a href=&quot;x&quot;&gt;verify&lt;/a&gt;", out)
-        self.assertIn("<p>allowed html</p>", out)
+        self.assertIn('&lt;script&gt;', out)
+        self.assertIn('&lt;b&gt;bold note&lt;/b&gt;', out)
+        self.assertIn('&lt;i&gt;italic update&lt;/i&gt;', out)
+        self.assertIn('&lt;a href=&quot;x&quot;&gt;verify&lt;/a&gt;', out)
+        self.assertIn('<p>allowed html</p>', out)
 
-    def test_all_internal_links_resolve(self):
+    def test_all_internal_links_resolve(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             subprocess.run(
                 [
                     sys.executable,
-                    str(ROOT / "scripts" / "build_site.py"),
-                    "--out",
+                    str(ROOT / 'scripts' / 'build_site.py'),
+                    '--out',
                     tmp,
-                    "--site-data",
-                    str(ROOT / "site-data"),
+                    '--site-data',
+                    str(ROOT / 'site-data'),
                 ],
                 check=True,
             )
             site = Path(tmp)
             resolved_site = site.resolve()
-            for html_file in site.rglob("*.html"):
+            for html_file in site.rglob('*.html'):
                 source_dir = html_file.parent
-                hrefs = re.findall(r'href="([^"]+)"', html_file.read_text(encoding="utf-8"))
+                hrefs = re.findall(r'href="([^"]+)"', html_file.read_text(encoding='utf-8'))
                 for href in hrefs:
-                    if href.startswith(("http", "#", "mailto:", "/")):
+                    if href.startswith(('http', '#', 'mailto:', '/')):
                         continue
                     target = (source_dir / href).resolve()
-                    if href.endswith("/"):
-                        target = target / "index.html"
+                    if href.endswith('/'):
+                        target = target / 'index.html'
                     self.assertTrue(
                         target.exists(),
-                        f"Missing link target: {href} from {html_file}",
+                        f'Missing link target: {href} from {html_file}',
                     )
                     self.assertTrue(
                         resolved_site in target.parents,
-                        f"Link target escapes site root: {href} -> {target}",
+                        f'Link target escapes site root: {href} -> {target}',
                     )
 
-    def test_build_is_repeatable(self):
+    def test_build_is_repeatable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            site1 = Path(tmp) / "site1"
-            site2 = Path(tmp) / "site2"
-            build_main(["--site-data", str(ROOT / "site-data"), "--site", str(site1)])
-            build_main(["--site-data", str(ROOT / "site-data"), "--site", str(site2)])
-            for html_file in site1.rglob("*.html"):
+            site1 = Path(tmp) / 'site1'
+            site2 = Path(tmp) / 'site2'
+            build_main(['--site-data', str(ROOT / 'site-data'), '--site', str(site1)])
+            build_main(['--site-data', str(ROOT / 'site-data'), '--site', str(site2)])
+            for html_file in site1.rglob('*.html'):
                 rel = html_file.relative_to(site1)
                 self.assertEqual(
                     html_file.read_bytes(),
                     (site2 / rel).read_bytes(),
-                    f"{rel} differs between builds",
+                    f'{rel} differs between builds',
                 )

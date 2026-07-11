@@ -1,17 +1,38 @@
-<h1>What does the FCC router action mean for consumers?</h1>
-
-<div class="card">
-  <h2>$headline</h2>
-  <p>$continued_use_note</p>
-  <p>$update_note</p>
-  <p class="source-link">$verification_note</p>
+<div class="hero">
+  <div class="hero-content">
+    <div class="pill"><span class="pill-dot"></span> Consumer Notice</div>
+    <h1>$headline</h1>
+    <div class="hero-box">
+      <p class="lead">$continued_use_note</p>
+      <p>$update_note</p>
+      <div class="hero-box-footer">
+        <a href="${root}sources/">$verification_note</a>
+      </div>
+    </div>
+    <a href="#alerts" class="scroll-link">View active alerts</a>
+  </div>
 </div>
 
-<h2>Active alerts</h2>
-$alerts
+<section id="alerts" class="section">
+  <div class="container">
+    <h2 class="section-title">Active alerts</h2>
+    <div class="alert-grid">$alerts</div>
+  </div>
+</section>
 
-<h2>Top questions</h2>
-$faqs
+<section class="section">
+  <div class="container">
+    <h2 class="section-title section-title-center">Top questions</h2>
+    <div class="faq-grid">$faqs</div>
+  </div>
+</section>
 
-<h2>Latest timeline events</h2>
-$timeline
+<section class="section">
+  <div class="container timeline-section">
+    <div class="timeline-header">
+      <h2 class="section-title">Latest timeline events</h2>
+      <p class="section-subtitle">Key regulatory updates and waivers affecting consumer-grade routing equipment.</p>
+    </div>
+    <div class="timeline-list">$timeline</div>
+  </div>
+</section>

@@ -11,12 +11,22 @@ site/*
 !site/templates/**
 !site/static/
 !site/static/**
+site-built/
 
 # Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Test and coverage artifacts
+.coverage
+coverage.xml
+.pytest_cache/
+
+# Local dev logs and temp files
+server.log
+generated-page*.html
 
 # OS/editor
 .DS_Store

@@ -25,7 +25,7 @@
       }).slice(0, 20);
 
       if (!hits.length) {
-        resultsEl.innerHTML = '<p>No results found.</p>';
+        resultsEl.innerHTML = '<p class="source-link">No results found.</p>';
         return;
       }
 
@@ -48,7 +48,7 @@
       ready = true;
     } catch (err) {
       ready = false;
-      resultsEl.innerHTML = '<p>Could not load search index.</p>';
+      resultsEl.innerHTML = '<p class="source-link">Could not load search index.</p>';
     }
   })();
 

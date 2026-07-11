@@ -6,40 +6,59 @@ import unittest
 from pathlib import Path
 
 from scripts.export_site_json import EXPORTS
+from scripts.export_site_json import main as export_main
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class TestExportJson(unittest.TestCase):
-    def test_exports_search_index_json(self):
+    def test_exports_search_index_json(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             result = subprocess.run(
-                [sys.executable, str(ROOT / "scripts" / "export_site_json.py"), "--out", tmp],
+                [sys.executable, str(ROOT / 'scripts' / 'export_site_json.py'), '--out', tmp],
                 capture_output=True,
                 text=True,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            path = Path(tmp) / "search_index.json"
+            path = Path(tmp) / 'search_index.json'
             self.assertTrue(path.exists())
-            data = json.loads(path.read_text(encoding="utf-8"))
+            data = json.loads(path.read_text(encoding='utf-8'))
             self.assertIsInstance(data, list)
             if data:
-                self.assertIn("table_name", data[0])
-                self.assertIn("row_id", data[0])
-                self.assertIn("title", data[0])
-                self.assertIn("snippet", data[0])
+                self.assertIn('table_name', data[0])
+                self.assertIn('row_id', data[0])
+                self.assertIn('title', data[0])
+                self.assertIn('snippet', data[0])
 
-    def test_export_is_deterministic(self):
+    def test_export_is_deterministic(self) -> None:
         with tempfile.TemporaryDirectory() as tmp1, tempfile.TemporaryDirectory() as tmp2:
             subprocess.run(
-                [sys.executable, str(ROOT / "scripts" / "export_site_json.py"), "--out", tmp1],
+                [sys.executable, str(ROOT / 'scripts' / 'export_site_json.py'), '--out', tmp1],
                 check=True,
             )
             subprocess.run(
-                [sys.executable, str(ROOT / "scripts" / "export_site_json.py"), "--out", tmp2],
+                [sys.executable, str(ROOT / 'scripts' / 'export_site_json.py'), '--out', tmp2],
                 check=True,
             )
             for name in EXPORTS:
                 a = Path(tmp1) / name
                 b = Path(tmp2) / name
-                self.assertEqual(a.read_bytes(), b.read_bytes(), f"{name} differs")
+                self.assertEqual(a.read_bytes(), b.read_bytes(), f'{name} differs')
+
+    def test_main_invocation_exports_all_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            export_main(['--out', tmp])
+            for name in EXPORTS:
+                self.assertTrue((Path(tmp) / name).exists(), f'{name} not exported')
+
+    def test_all_export_files_are_valid_json(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(
+                [sys.executable, str(ROOT / 'scripts' / 'export_site_json.py'), '--out', tmp],
+                check=True,
+            )
+            for name in EXPORTS:
+                path = Path(tmp) / name
+                self.assertTrue(path.exists(), f'{name} not exported')
+                data = json.loads(path.read_text(encoding='utf-8'))
+                self.assertIsInstance(data, list)
